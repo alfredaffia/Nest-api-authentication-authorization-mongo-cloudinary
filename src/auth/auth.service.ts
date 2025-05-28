@@ -51,4 +51,12 @@ export class AuthService {
 
     return { token };
   }
+
+    async findEmail(email: string) {
+    const mail = await this.userModel.findOne({ email })
+    if (!mail) {
+      throw new UnauthorizedException()
+    }
+    return mail;
+  }
 }
