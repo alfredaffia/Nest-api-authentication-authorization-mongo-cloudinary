@@ -1,16 +1,24 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { UserRole } from '../enum/user.role.enum';
 
 export class SignUpDto {
   @IsNotEmpty()
   @IsString()
-  readonly name: string;
+  name: string;
 
   @IsNotEmpty()
   @IsEmail({}, { message: 'Please enter correct email' })
-  readonly email: string;
+  email: string;
 
   @IsNotEmpty()
   @IsString()
   @MinLength(6)
-  readonly password: string;
+  password: string;
+
+  @IsString()
+  @IsOptional()
+  profilePictureUrl:string;
+
+  @IsOptional()
+  role:UserRole
 }

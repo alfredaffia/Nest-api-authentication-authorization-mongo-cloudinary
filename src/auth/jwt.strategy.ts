@@ -21,12 +21,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload) {
     const { id } = payload;
-
     const user = await this.userModel.findById(id);
  console.log('User validated:', user);
     if (!user) {
       throw new UnauthorizedException('Login first to access this endpoint.');
     }
+       if (user.isBlocked===true) {
+      throw new UnauthorizedException(`${user.name} Your account is blocked`);
+    }
+    console.log('User found:', user);
 
     return user;
    
