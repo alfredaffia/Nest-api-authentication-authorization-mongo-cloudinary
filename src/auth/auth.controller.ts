@@ -52,4 +52,12 @@ export class AuthController {
     @Param('id') id: string) {
     return this.authService.BlockUser(id);
   }
+
+    @UseGuards(AuthGuard(),RolesGuard)
+  @Roles(UserRole.ADMIN,UserRole.ADMIN) 
+  @Patch(':id/unblock')
+  async updateUnBlockStatus(
+    @Param('id') id: string) {
+    return this.authService.unBlockUser(id);
+  }
 }

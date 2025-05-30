@@ -98,7 +98,7 @@ export class AuthService {
     async findOne(id: string) {
     // const user = await this.userModel.find()
 
-    const findUserById = await this.userModel.findOne({ id });
+    const findUserById = await this.userModel.findById(id );
     if (!findUserById) {
       throw new NotFoundException('User not found');
     }
