@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+.git
+.gitignore
+.vscode
+npm-debug.log
+docker-compose.yml
+Dockerfile
+# Add any other files/folders you don't want in the final image
