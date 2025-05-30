@@ -46,7 +46,7 @@ export class AuthController {
   }
 
     @UseGuards(AuthGuard(),RolesGuard)
-  @Roles(UserRole.ADMIN,UserRole.ADMIN)
+  @Roles(UserRole.ADMIN)
   @Patch(':id/block')
   async updateBlockStatus(
     @Param('id') id: string) {
@@ -54,10 +54,11 @@ export class AuthController {
   }
 
     @UseGuards(AuthGuard(),RolesGuard)
-  @Roles(UserRole.ADMIN,UserRole.ADMIN) 
+  @Roles(UserRole.ADMIN) 
   @Patch(':id/unblock')
   async updateUnBlockStatus(
     @Param('id') id: string) {
     return this.authService.unBlockUser(id);
   }
 }
+
