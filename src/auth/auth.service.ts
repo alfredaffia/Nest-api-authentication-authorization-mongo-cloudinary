@@ -1,17 +1,33 @@
 import { BadRequestException, ConflictException, HttpException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User } from './schemas/user.schema';
+import { User } from '../user/schemas/user.schema';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
-import { SignUpDto } from './dto/signup.dto';
-import { LoginDto } from './dto/login.dto';
+import { SignUpDto } from '../user/dto/signup.dto';
+import { LoginDto } from '../user/dto/login.dto';
 import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
+import { UserRole } from '../user/enum/user.role.enum';
 
 @Injectable()
 export class AuthService {
+    private readonly ADMIN_USERS_TO_SEED = [
+    {
+      email: 'admin@example.com',
+      password: 'SuperSecureAdminPassword123!', 
+      name: 'Admin',
+      role:UserRole.ADMIN
+    },
+    {
+      email: 'secondary.admin@example.com',
+      password: 'AnotherStrongPassword456!', 
+      name: 'Secondary Administrator',
+      role:UserRole.ADMIN
+    },
+  ];
   constructor(
+
     @InjectModel(User.name)
     private userModel: Model<User>,
     private jwtService: JwtService,
@@ -210,7 +226,38 @@ async BlockUser(id: string): Promise<{ message: string }> {
 
   }
     
-  
+    async seedDefaultAdmins(): Promise<void> {
+    if (!this.ADMIN_USERS_TO_SEED || this.ADMIN_USERS_TO_SEED.length === 0) {
+      console.warn('No admin users defined for seeding. Skipping.');
+      return;
+    }
+
+    for (const adminData of this.ADMIN_USERS_TO_SEED) {
+      try {
+        const existingAdmin = await this.userModel.findOne({ email: adminData.email }).exec();
+        if (existingAdmin) {
+          console.warn(`Admin "${adminData.email}" already exists. Skipping.`);
+          continue;
+        }
+
+        const hashedPassword = await bcrypt.hash(adminData.password, 10);
+
+        const newAdmin = new this.userModel({
+          name: adminData.name,
+          email: adminData.email,
+          password: hashedPassword,
+       role: adminData.role || UserRole.ADMIN, 
+          profilePictureUrl: null,
+        });
+
+        await newAdmin.save();
+        console.log(`Admin "${adminData.email}" seeded successfully.`);
+
+      } catch (error) {
+        console.error(`Error seeding admin "${adminData.email}": ${error.message}`);
+      }
+    }
+  }
 
 
 

@@ -1,12 +1,12 @@
 import { BadRequestException, Body, Controller, Get, Param, Patch, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { SignUpDto } from './dto/signup.dto';
+import { LoginDto } from '../user/dto/login.dto';
+import { SignUpDto } from '../user/dto/signup.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from './guard/role.guard';
 import { Roles } from './guard/role';
-import { UserRole } from './enum/user.role.enum';
+import { UserRole } from '../user/enum/user.role.enum';
 
 @Controller('auth')
 export class AuthController {
@@ -59,6 +59,12 @@ export class AuthController {
   async updateUnBlockStatus(
     @Param('id') id: string) {
     return this.authService.unBlockUser(id);
+  }
+
+    @Post('seed-admins')
+  async seedAdmins() {
+    return await this.authService.seedDefaultAdmins();
+
   }
 }
 

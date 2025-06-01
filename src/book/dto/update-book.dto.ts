@@ -5,7 +5,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { User } from '../../auth/schemas/user.schema';
+import { User } from '../../user/schemas/user.schema';
 import { Category } from '../schemas/book.schema';
 
 export class UpdateBookDto {

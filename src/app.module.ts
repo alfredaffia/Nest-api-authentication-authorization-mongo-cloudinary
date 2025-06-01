@@ -4,8 +4,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { BookModule } from './book/book.module';
 import { AuthModule } from './auth/auth.module';
 import { CloudinaryModule } from './cloudinary/coudinary.module';
-import { AdminSeeder } from './admin.seeder';
-import { User, UserSchema } from './auth/schemas/user.schema';
+import { User, UserSchema } from './user/schemas/user.schema';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -18,8 +18,9 @@ import { User, UserSchema } from './auth/schemas/user.schema';
       MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]), 
     BookModule,
     AuthModule,
+    UserModule,
   ],
   controllers: [],
-  providers: [AdminSeeder],
+  providers: [],
 })
 export class AppModule {}

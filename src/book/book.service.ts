@@ -8,7 +8,7 @@ import * as mongoose from 'mongoose';
 import { Book } from './schemas/book.schema';
 
 import { Query } from 'express-serve-static-core';
-import { User } from '../auth/schemas/user.schema';
+import { User } from '../user/schemas/user.schema';
 
 @Injectable()
 export class BookService {
