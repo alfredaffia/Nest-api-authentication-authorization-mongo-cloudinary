@@ -29,18 +29,12 @@ export class UserService {
     private userModel: Model<User>,
   ) {}
 
-
-
-
-
+  // find a user by id
     async findOne(id: string) {
-    // const user = await this.userModel.find()
-
     const findUserById = await this.userModel.findById(id );
     if (!findUserById) {
       throw new NotFoundException('User not found');
     }
-
     return findUserById;
   }
 
@@ -99,31 +93,30 @@ export class UserService {
   }
 
 
-async BlockUser(id: string): Promise<{ message: string }> {
-  const user = await this.userModel.findOne({ where: { id } });
-
-  if (!user) {
-    throw new NotFoundException('User not found');
+  async blockUser(id: string): Promise<{ message: string }> {
+    const user = await this.userModel.findById(id); // Use `findById` to query by MongoDB `_id`
+  
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+  
+    // Set the user's `isBlocked` status to true
+    user.isBlocked = true;
+    await user.save(); // Save the updated user document
+  
+    return { message: `User with ID ${id} has been blocked.` };
   }
 
-  await this.userModel.updateOne(
-    { _id: user._id }, // filter - which document to update
-    { isBlocked: false } // update - what fields to change
-  );
-
-  return { message: `User with ID ${id} has been unblocked.` };
-}
-
-  async unBlockUser(id: string): Promise<{ message: string }> {
-    const user = await this.userModel.findOne({ where: { id } });
-
+    async unblockUser(id: string): Promise<{ message: string }> {
+    const user = await this.userModel.findById(id); // Use `findById` to query by MongoDB `_id`
+  
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
     user.isBlocked = false;
-    await this.userModel.updateOne(user);
-
+    await user.save(); // Save the updated user document
+  
     return { message: `User with ID ${id} has been unblocked.` };
   }
 
@@ -155,7 +148,8 @@ async BlockUser(id: string): Promise<{ message: string }> {
         });
 
         await newAdmin.save();
-        console.log(`Admin "${adminData.email}" seeded successfully.`);
+          console.log(`Admin "${adminData.email}" seeded successfully.`);
+      
 
       } catch (error) {
         console.error(`Error seeding admin "${adminData.email}": ${error.message}`);
@@ -163,6 +157,12 @@ async BlockUser(id: string): Promise<{ message: string }> {
     }
   }
 
+
+
+  async promoteToAdmin(id :string){
+
+
+  }
 
 
 }

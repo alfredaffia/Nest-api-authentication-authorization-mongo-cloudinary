@@ -37,7 +37,7 @@ export class UserController {
   @Patch(':id/block')
   async updateBlockStatus(
     @Param('id') id: string) {
-    return this.userService.BlockUser(id);
+    return this.userService.blockUser(id);
   }
 
     @UseGuards(AuthGuard(),RolesGuard)
@@ -45,9 +45,8 @@ export class UserController {
 
   ) 
   @Patch(':id/unblock')
-  async updateUnBlockStatus(
-    @Param('id') id: string) {
-    return this.userService.unBlockUser(id);
+  async updateUnBlockStatus(@Param('id') id: string) {
+    return this.userService.unblockUser(id);
   }
 
     @Post('seed-admins')
