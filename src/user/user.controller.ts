@@ -1,34 +1,58 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { UserRole } from '../auth/enum/user.role.enum';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { RolesGuard } from 'src/auth/guard/role.guard';
+import { Roles } from 'src/auth/guard/role';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
-  }
 
-  @Get()
-  findAll() {
-    return this.userService.findAll();
-  }
-
+    @UseGuards(AuthGuard())
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
+    return this.userService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
+
+    @Post('upload/:id')
+  @UseInterceptors(FileInterceptor('file')) // Ensure this matches the form-data key
+  async uploadFile(@UploadedFile() file: Express.Multer.File, @Param('id') id: string) {
+    if (!file) {
+      throw new BadRequestException('No file received. Please upload a valid file.');
+    }
+
+    try {
+      return await this.userService.uploadProfilePicture(file,id);
+    } catch (error) {
+      throw new BadRequestException(`File upload failed: ${error.message}`);
+    }
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+    @UseGuards(AuthGuard(),RolesGuard)
+  @Roles(UserRole.Admin)
+  @Patch(':id/block')
+  async updateBlockStatus(
+    @Param('id') id: string) {
+    return this.userService.BlockUser(id);
+  }
+
+    @UseGuards(AuthGuard(),RolesGuard)
+  @Roles(UserRole.Admin
+
+  ) 
+  @Patch(':id/unblock')
+  async updateUnBlockStatus(
+    @Param('id') id: string) {
+    return this.userService.unBlockUser(id);
+  }
+
+    @Post('seed-admins')
+  async seedAdmins() {
+    return await this.userService.seedDefaultAdmins();
+
   }
 }

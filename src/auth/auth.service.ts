@@ -2,35 +2,23 @@ import { BadRequestException, ConflictException, HttpException, Injectable, NotF
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from '../user/schemas/user.schema';
-import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from '../user/dto/signup.dto';
 import { LoginDto } from '../user/dto/login.dto';
-import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
-import { UserRole } from '../user/enum/user.role.enum';
+import { UserRole } from './enum/user.role.enum';
+import { UserService } from 'src/user/user.service';
+import * as bcrypt from 'bcryptjs';
+
 
 @Injectable()
 export class AuthService {
-    private readonly ADMIN_USERS_TO_SEED = [
-    {
-      email: 'admin@example.com',
-      password: 'SuperSecureAdminPassword123!', 
-      name: 'Admin',
-      role:UserRole.ADMIN
-    },
-    {
-      email: 'secondary.admin@example.com',
-      password: 'AnotherStrongPassword456!', 
-      name: 'Secondary Administrator',
-      role:UserRole.ADMIN
-    },
-  ];
   constructor(
 
     @InjectModel(User.name)
     private userModel: Model<User>,
     private jwtService: JwtService,
+    private userService:UserService
   ) {}
 
   async signUp(signUpDto: SignUpDto,file?:Express.Multer.File){
@@ -53,12 +41,12 @@ export class AuthService {
            ...rest
     });
 
-      console.log('Uploaded file:', file);
+      // console.log('Uploaded file:', file);
   
       // If a profile picture is provided, upload it
       if (file) {
         try {
-          const profilePictureUrl = await this.uploadProfilePicture(file, UserDetails._id.toString());
+          const profilePictureUrl = await this.userService.uploadProfilePicture(file, UserDetails._id.toString());
           UserDetails.profilePictureUrl = profilePictureUrl;
   
           // Save the updated user details
@@ -69,7 +57,7 @@ export class AuthService {
           throw new BadRequestException('Failed to upload profile picture.');
         }
       }
-    const token = this.jwtService.sign({ id: UserDetails.id });
+    const token = this.jwtService.sign({ id: UserDetails.id,email: UserDetails.email, role: UserDetails.role });
   
 
     return { token 
@@ -97,10 +85,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const token = this.jwtService.sign({ id: user._id });
+    const token = this.jwtService.sign({ id: user._id,email: user.email, role: user.role });
 
     return { token };
   }
+
+
 
     async findEmail(email: string) {
     const mail = await this.userModel.findOne({ email })
@@ -111,111 +101,16 @@ export class AuthService {
   }
 
 
-    async findOne(id: string) {
-    // const user = await this.userModel.find()
-
-    const findUserById = await this.userModel.findById(id );
-    if (!findUserById) {
-      throw new NotFoundException('User not found');
-    }
-
-    return findUserById;
-  }
-
-  
-
-  // Upload or update a profile picture
-  async uploadProfilePicture(file: Express.Multer.File, userId: string): Promise<string> {
-    if (!file) {
-      throw new BadRequestException('No file provided.');
-    }
-
-    const allowedMimeTypes = ['image/jpeg', 'image/png'];
-    if (!allowedMimeTypes.includes(file.mimetype)) {
-      throw new BadRequestException('Invalid file type. Only JPG and PNG are allowed.');
-    }
-
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-    if (file.size > MAX_SIZE) {
-      throw new BadRequestException('File size exceeds 5MB limit.');
-    }
-
-    return new Promise(async (resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        { resource_type: 'image' },
-        async (error, result) => {
-          if (error) {
-            console.error('Cloudinary Upload Error:', error);
-            return reject(new BadRequestException('File upload failed.'));
-          }
-
-          if (!result) {
-            return reject(new BadRequestException('Cloudinary did not return a result.'));
-          }
-
-          try {
-            const user = await this.userModel.findById(userId);
-            if (!user) {
-              throw new NotFoundException('User not found');
-            }
-
-            // Update the user's profile picture URL
-            user.profilePictureUrl = result.secure_url;
-            await user.save();
-
-            resolve(result.secure_url);
-          } catch (dbError) {
-            console.error('Database Save Error:', dbError);
-            reject(new BadRequestException('Database save failed.'));
-          }
-        },
-      );
-
-      const fileStream = Readable.from(file.buffer);
-      fileStream.pipe(uploadStream);
-    });
-  }
-
-
-async BlockUser(id: string): Promise<{ message: string }> {
-  const user = await this.userModel.findOne({ where: { id } });
-
-  if (!user) {
-    throw new NotFoundException('User not found');
-  }
-
-  await this.userModel.updateOne(
-    { _id: user._id }, // filter - which document to update
-    { isBlocked: false } // update - what fields to change
-  );
-
-  return { message: `User with ID ${id} has been unblocked.` };
-}
-
-  async unBlockUser(id: string): Promise<{ message: string }> {
-    const user = await this.userModel.findOne({ where: { id } });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    user.isBlocked = false;
-    await this.userModel.updateOne(user);
-
-    return { message: `User with ID ${id} has been unblocked.` };
-  }
-
-
   async user(headers: any): Promise<any> {
     const authorizationHeader = headers.authorization; //It tries to extract the authorization header from the incoming request headers. This header typically contains the token used for authentication.
     if (authorizationHeader) {
       const token = authorizationHeader.replace('Bearer ', '');
-      const secret = process.env.JWTSECRET;
+      const secret = process.env.JWT_SECRET;
       //checks if the authorization header exists. If not, it will skip to the else block and throw an error.
       try {
         const decoded = this.jwtService.verify(token);
         let id = decoded["id"]; // After verifying the token, the function extracts the user's id from the decoded token payload.
-        let user = await this.userModel.findById({ id });
+        let user = await this.userModel.findOne({ id });
         return { id: id, email: user?.email, role: user?.role };
       } catch (error) {
         throw new UnauthorizedException('Invalid token');
@@ -225,44 +120,6 @@ async BlockUser(id: string): Promise<{ message: string }> {
       throw new UnauthorizedException('Invalid or missing Bearer token');
 
   }
-    
-    async seedDefaultAdmins(): Promise<void> {
-    if (!this.ADMIN_USERS_TO_SEED || this.ADMIN_USERS_TO_SEED.length === 0) {
-      console.warn('No admin users defined for seeding. Skipping.');
-      return;
-    }
-
-    for (const adminData of this.ADMIN_USERS_TO_SEED) {
-      try {
-        const existingAdmin = await this.userModel.findOne({ email: adminData.email }).exec();
-        if (existingAdmin) {
-          console.warn(`Admin "${adminData.email}" already exists. Skipping.`);
-          continue;
-        }
-
-        const hashedPassword = await bcrypt.hash(adminData.password, 10);
-
-        const newAdmin = new this.userModel({
-          name: adminData.name,
-          email: adminData.email,
-          password: hashedPassword,
-       role: adminData.role || UserRole.ADMIN, 
-          profilePictureUrl: null,
-        });
-
-        await newAdmin.save();
-        console.log(`Admin "${adminData.email}" seeded successfully.`);
-
-      } catch (error) {
-        console.error(`Error seeding admin "${adminData.email}": ${error.message}`);
-      }
-    }
-  }
-
-
-
-
-
 
 
 

@@ -5,7 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './user/schemas/user.schema';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
-import { UserRole } from './user/enum/user.role.enum';
+import { UserRole } from './auth/enum/user.role.enum';
 
 @Injectable()
 export class AdminSeeder implements OnModuleInit {
@@ -45,13 +45,13 @@ export class AdminSeeder implements OnModuleInit {
           name: adminName,
           email: adminEmail,
           password: hashedPassword,
-          role: UserRole.ADMIN, 
+          role: UserRole.Admin, 
         },
       {
           name: adminName2,
           email: adminEmail2,
           password: hashedPassword,
-          role: UserRole.ADMIN, 
+          role: UserRole.Admin, 
         });
 
         await adminUser.save();
