@@ -123,7 +123,7 @@ export class UserService {
 
 
     
-    async seedDefaultAdmins(): Promise<void> {
+    async seedDefaultAdmins() {
     if (!this.ADMIN_USERS_TO_SEED || this.ADMIN_USERS_TO_SEED.length === 0) {
       console.warn('No admin users defined for seeding. Skipping.');
       return;

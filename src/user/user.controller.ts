@@ -18,6 +18,7 @@ export class UserController {
   }
 
 
+    @UseGuards(AuthGuard())
     @Post('upload/:id')
   @UseInterceptors(FileInterceptor('file')) // Ensure this matches the form-data key
   async uploadFile(@UploadedFile() file: Express.Multer.File, @Param('id') id: string) {
