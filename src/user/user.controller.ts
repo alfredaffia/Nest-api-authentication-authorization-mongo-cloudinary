@@ -8,23 +8,24 @@ import { Roles } from 'src/auth/guard/role';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
 
-    @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard())
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
   }
-      @UseGuards(AuthGuard(), RolesGuard )
+  @UseGuards(AuthGuard(), RolesGuard)
+  @Roles(UserRole.Admin)
   @Get()
   findAll() {
     return this.userService.findAll();
   }
 
 
-    @UseGuards(AuthGuard())
-    @Post('upload/:id')
+  @UseGuards(AuthGuard())
+  @Post('upload/:id')
   @UseInterceptors(FileInterceptor('file')) // Ensure this matches the form-data key
   async uploadFile(@UploadedFile() file: Express.Multer.File, @Param('id') id: string) {
     if (!file) {
@@ -32,13 +33,13 @@ export class UserController {
     }
 
     try {
-      return await this.userService.uploadProfilePicture(file,id);
+      return await this.userService.uploadProfilePicture(file, id);
     } catch (error) {
       throw new BadRequestException(`File upload failed: ${error.message}`);
     }
   }
 
-    @UseGuards(AuthGuard(),RolesGuard)
+  @UseGuards(AuthGuard(), RolesGuard)
   @Roles(UserRole.Admin)
   @Patch(':id/block')
   async updateBlockStatus(
@@ -46,16 +47,16 @@ export class UserController {
     return this.userService.blockUser(id);
   }
 
-    @UseGuards(AuthGuard(),RolesGuard)
+  @UseGuards(AuthGuard(), RolesGuard)
   @Roles(UserRole.Admin
 
-  ) 
+  )
   @Patch(':id/unblock')
   async updateUnBlockStatus(@Param('id') id: string) {
     return this.userService.unblockUser(id);
   }
 
-    @Post('seed-admins')
+  @Post('seed-admins')
   async seedAdmins() {
     return await this.userService.seedDefaultAdmins();
 
