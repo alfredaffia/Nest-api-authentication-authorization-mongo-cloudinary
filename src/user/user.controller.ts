@@ -18,7 +18,7 @@ export class UserController {
   }
   @UseGuards(AuthGuard(), RolesGuard)
   @Roles(UserRole.Admin)
-  @Get()
+  @Get('/fetch-all')
   findAll() {
     return this.userService.findAll();
   }
