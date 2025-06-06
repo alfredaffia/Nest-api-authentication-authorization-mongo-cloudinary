@@ -16,6 +16,11 @@ export class UserController {
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
   }
+      @UseGuards(AuthGuard(), RolesGuard )
+  @Get()
+  findAll() {
+    return this.userService.findAll();
+  }
 
 
     @UseGuards(AuthGuard())

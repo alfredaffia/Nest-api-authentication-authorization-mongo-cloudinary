@@ -38,7 +38,14 @@ export class UserService {
     return findUserById;
   }
 
-  
+async findAll(){
+    const users = await this.userModel.find();
+    if (!users || users.length === 0) {
+      throw new NotFoundException('No users found');
+    }
+    return users;
+}
+
 
   // Upload or update a profile picture
   async uploadProfilePicture(file: Express.Multer.File, userId: string): Promise<string> {
