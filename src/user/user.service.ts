@@ -41,7 +41,7 @@ export class UserService {
 
 async findAll(){
     const users = await this.userModel.find();
-    if (!users || users.length === 0) {
+    if (!users) {
       throw new NotFoundException('No users found');
     }
     return users;

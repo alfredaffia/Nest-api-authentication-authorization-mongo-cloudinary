@@ -19,7 +19,7 @@ export class UserController {
   }
   @UseGuards(AuthGuard(), RolesGuard)
   @Roles(UserRole.Admin)
-  @Get('/fetch-all')
+  @Get()
   findAll() {
     return this.userService.findAll();
   }
