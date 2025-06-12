@@ -5,6 +5,7 @@ import { UserRole } from '../auth/enum/user.role.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RolesGuard } from 'src/auth/guard/role.guard';
 import { Roles } from 'src/auth/guard/role';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -55,6 +56,17 @@ export class UserController {
   async updateUnBlockStatus(@Param('id') id: string) {
     return this.userService.unblockUser(id);
   }
+
+    @Patch(':id')
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.update(id, updateUserDto);
+  }
+
+    @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.userService.remove(id);
+  }
+
 
   @Post('seed-admins')
   async seedAdmins() {

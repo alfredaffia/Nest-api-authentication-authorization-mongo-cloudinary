@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
@@ -6,6 +6,7 @@ import { UserRole } from '../auth/enum/user.role.enum';
 import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
 import * as bcrypt from 'bcryptjs';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 
 @Injectable()
@@ -128,7 +129,29 @@ async findAll(){
   }
 
 
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const newUpdate = await this.userModel.findById(id)
 
+    if (!newUpdate) {
+      throw new NotFoundException('user not found')
+    }
+    if(updateUserDto.password){
+          const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
+              updateUserDto.password=await hashedPassword
+    }
+         const existinguser=await this.userModel.findOne({email:updateUserDto.email})
+      if(existinguser){
+        throw new ConflictException('user with this email already exist')
+      }
+
+    const updateUser = await this.userModel.findByIdAndUpdate(id, updateUserDto)
+    const updatedUser = await this.userModel.findById(id)
+    return{
+      statusCode :200,
+      message: 'user updated successfully',
+      data:updatedUser
+    }
+  }
     
     async seedDefaultAdmins() {
     if (!this.ADMIN_USERS_TO_SEED || this.ADMIN_USERS_TO_SEED.length === 0) {
@@ -164,12 +187,16 @@ async findAll(){
     }
   }
 
+  async remove(id: string) {
+    const result = await this.userModel.findByIdAndDelete(id);
+    if (!result) {
+      throw new NotFoundException(`Library record with ID ${id} not found`);
+    }
+    const newresult = await this.userModel.findByIdAndDelete(id)
 
-
-  async promoteToAdmin(id :string){
-
-
+    return {
+      message: `Library record with ID ${id} deleted successfully`
+    };
   }
-
 
 }
