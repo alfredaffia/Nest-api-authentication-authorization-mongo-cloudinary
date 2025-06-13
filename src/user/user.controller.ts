@@ -17,13 +17,13 @@ export class UserController {
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
   }
+
   @UseGuards(AuthGuard(), RolesGuard)
   @Roles(UserRole.Admin)
   @Get()
   findAll() {
     return this.userService.findAll();
   }
-
 
   @UseGuards(AuthGuard())
   @Post('upload/:id')
@@ -32,13 +32,13 @@ export class UserController {
     if (!file) {
       throw new BadRequestException('No file received. Please upload a valid file.');
     }
-
     try {
       return await this.userService.uploadProfilePicture(file, id);
     } catch (error) {
       throw new BadRequestException(`File upload failed: ${error.message}`);
     }
   }
+
 
   @UseGuards(AuthGuard(), RolesGuard)
   @Roles(UserRole.Admin)
@@ -48,19 +48,23 @@ export class UserController {
     return this.userService.blockUser(id);
   }
 
+
   @UseGuards(AuthGuard(), RolesGuard)
   @Roles(UserRole.Admin
-
   )
+
+
   @Patch(':id/unblock')
   async updateUnBlockStatus(@Param('id') id: string) {
     return this.userService.unblockUser(id);
   }
 
+
     @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(id, updateUserDto);
   }
+  
 
     @Delete(':id')
   remove(@Param('id') id: string) {

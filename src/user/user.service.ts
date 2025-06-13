@@ -11,41 +11,43 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
-      private readonly ADMIN_USERS_TO_SEED = [
-      {
-        email: 'admin@gmail.com',
-        password: 'SuperSecureAdminPassword123!', 
-        name: 'Admin',
-        role:UserRole.Admin
-      },
-      {
-        email: 'admin2@dmail.com',
-        password: 'AnotherStrongPassword456!', 
-        name: 'Secondary Administrator',
-        role:UserRole.Admin
-      },
-    ];
+  private readonly ADMIN_USERS_TO_SEED = [
+    {
+      email: 'admin@gmail.com',
+      password: 'SuperSecureAdminPassword123!',
+      name: 'Admin',
+      role: UserRole.Admin
+    },
+    {
+      email: 'admin2@dmail.com',
+      password: 'AnotherStrongPassword456!',
+      name: 'Secondary Administrator',
+      role: UserRole.Admin
+    },
+  ];
   constructor(
     @InjectModel(User.name)
     private userModel: Model<User>,
-  ) {}
+  ) { }
 
   // find a user by id
-    async findOne(id: string) {
-    const findUserById = await this.userModel.findById(id );
+  async findOne(id: string) {
+    const findUserById = await this.userModel.findById(id);
+    console.log(findUserById)
     if (!findUserById) {
       throw new NotFoundException('User not found');
     }
     return findUserById;
   }
 
-async findAll(){
+
+  async findAll() {
     const users = await this.userModel.find();
     if (!users) {
       throw new NotFoundException('No users found');
     }
     return users;
-}
+  }
 
 
   // Upload or update a profile picture
@@ -103,28 +105,28 @@ async findAll(){
 
   async blockUser(id: string): Promise<{ message: string }> {
     const user = await this.userModel.findById(id); // Use `findById` to query by MongoDB `_id`
-  
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
-  
+
     // Set the user's `isBlocked` status to true
     user.isBlocked = true;
     await user.save(); // Save the updated user document
-  
+
     return { message: `User with ID ${id} has been blocked.` };
   }
 
-    async unblockUser(id: string): Promise<{ message: string }> {
+  async unblockUser(id: string): Promise<{ message: string }> {
     const user = await this.userModel.findById(id); // Use `findById` to query by MongoDB `_id`
-  
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
     user.isBlocked = false;
     await user.save(); // Save the updated user document
-  
+
     return { message: `User with ID ${id} has been unblocked.` };
   }
 
@@ -135,25 +137,25 @@ async findAll(){
     if (!newUpdate) {
       throw new NotFoundException('user not found')
     }
-    if(updateUserDto.password){
-          const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
-              updateUserDto.password=await hashedPassword
+    if (updateUserDto.password) {
+      const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
+      updateUserDto.password = await hashedPassword
     }
-         const existinguser=await this.userModel.findOne({email:updateUserDto.email})
-      if(existinguser){
-        throw new ConflictException('user with this email already exist')
-      }
+    const existinguser = await this.userModel.findOne({ email: updateUserDto.email })
+    if (existinguser) {
+      throw new ConflictException('user with this email already exist')
+    }
 
     const updateUser = await this.userModel.findByIdAndUpdate(id, updateUserDto)
     const updatedUser = await this.userModel.findById(id)
-    return{
-      statusCode :200,
+    return {
+      statusCode: 200,
       message: 'user updated successfully',
-      data:updatedUser
+      data: updatedUser
     }
   }
-    
-    async seedDefaultAdmins() {
+
+  async seedDefaultAdmins() {
     if (!this.ADMIN_USERS_TO_SEED || this.ADMIN_USERS_TO_SEED.length === 0) {
       console.warn('No admin users defined for seeding. Skipping.');
       return;
@@ -173,13 +175,13 @@ async findAll(){
           name: adminData.name,
           email: adminData.email,
           password: hashedPassword,
-       role: adminData.role || UserRole.Admin, 
+          role: adminData.role || UserRole.Admin,
           profilePictureUrl: null,
         });
 
         await newAdmin.save();
-          console.log(`Admin "${adminData.email}" seeded successfully.`);
-      
+        console.log(`Admin "${adminData.email}" seeded successfully.`);
+
 
       } catch (error) {
         console.error(`Error seeding admin "${adminData.email}": ${error.message}`);
